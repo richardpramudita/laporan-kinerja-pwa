@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#12304a"><meta name="description" content="Aplikasi Laporan Kinerja Bulanan">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg">
+<title>Laporan Kinerja Bulanan</title>
+<style>
+:root{--navy:#12304a;--blue:#1e6387;--bg:#f3f6f8;--line:#dce4e9;--ink:#172b3a;--muted:#637583}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:15px system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink)}
+header{background:var(--navy);color:white;padding:20px max(18px,calc((100% - 900px)/2))}header h1{font-size:20px;margin:0 0 4px}header p{margin:0;color:#d8e5ec;font-size:13px}
+main{max-width:900px;margin:20px auto;padding:0 14px 40px}.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 3px 12px #18364b0b}
+h2{font-size:17px;margin:0 0 14px}.muted{color:var(--muted);font-size:13px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.template{border:1px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;background:#fff;text-align:left;color:var(--ink);min-height:104px}
+.template.selected{border:2px solid var(--blue);background:#f0f8fc}.template b{display:block;margin-bottom:6px}.template small{color:var(--muted);line-height:1.4}
+label{display:block;font-weight:600;font-size:13px;margin:12px 0 6px}
+input,select,textarea{width:100%;border:1px solid #cbd6dd;border-radius:10px;padding:11px;font:inherit;background:#fff;color:var(--ink)}
+textarea{min-height:125px;resize:vertical}input[type=file]{padding:9px}
+button{border:0;border-radius:10px;background:var(--blue);color:white;padding:12px 16px;font-weight:650;font-size:14px;cursor:pointer}
+button.secondary{background:#eaf0f4;color:var(--navy)}button.danger{background:#9d3434}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+.status{font-size:13px;padding:10px 12px;border-radius:9px;background:#eef4f7;color:#25475b;margin-top:12px;white-space:pre-wrap}
+.entry{border-top:1px solid var(--line);padding:13px 0}.entry:first-child{border-top:0}.entry strong{display:block}.entry img{max-width:100px;max-height:80px;object-fit:cover;border-radius:8px;float:right}
+.hidden{display:none!important}.topline{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:12px}
+</style></head>
+<body>
+<header><h1>Laporan Kinerja Bulanan</h1><p>Input dokumentasi kegiatan dan susun laporan Word serta PDF.</p></header>
+<main>
+<section class="panel" id="step1">
+<h2>1. Pilih format laporan</h2>
+<p class="muted">Pilih satu format sebelum mulai menginput kegiatan. Data setiap format disimpan terpisah.</p>
+<div class="grid" id="templates">
+<button class="template" data-template="linmas"><b>Pelindungan Masyarakat</b><small>Laporan Kinerja Pelaksanaan Kegiatan Pelindungan Masyarakat</small></button>
+<button class="template" data-template="perda"><b>Penegakan Perda dan Perkada</b><small>Laporan Tentang Penanganan Penegakan Perda dan Perkada</small></button>
+<button class="template" data-template="trantibum"><b>Trantibum</b><small>Laporan Kinerja Pelaksanaan Penyelenggaraan Ketertiban Umum dan Ketenteraman Masyarakat</small></button>
+</div>
+</section>
+<section class="panel hidden" id="step2">
+<div class="topline"><h2>2. Input kegiatan</h2><button class="secondary" id="changeTemplate">Ganti format</button></div>
+<div class="muted" id="selectedName"></div>
+<label for="reportMonth">Bulan laporan</label><input id="reportMonth" type="month">
+<label for="category">Kategori kegiatan</label><select id="category"><option value="">Pilih kategori</option></select>
+<label for="description">Uraian / hasil kegiatan</label><textarea id="description" placeholder="Tuliskan rangkaian kegiatan, hasil, tindak lanjut, atau keterangan penting..."></textarea>
+<label for="photo">Foto dokumentasi</label><input id="photo" type="file" accept="image/*" capture="environment">
+<div class="muted">Foto akan diperkecil sebelum dikirim. Usahakan tetap terbaca dan jelas.</div>
+<label for="caption">Keterangan foto (opsional)</label><input id="caption" placeholder="Contoh: Dokumentasi kegiatan di lokasi...">
+<div class="actions"><button id="saveEntry">Simpan kegiatan</button><button class="secondary" id="clearForm">Bersihkan isian</button></div>
+<div class="status" id="saveStatus">Data akan disimpan ke Google Drive setelah koneksi backend disiapkan.</div>
+</section>
+<section class="panel hidden" id="step3">
+<div class="topline"><h2>3. Kegiatan tersimpan</h2><span class="muted" id="entryCount">0 kegiatan</span></div>
+<div id="entries"></div>
+<div class="actions"><button id="generate">Buat laporan Word + PDF</button></div>
+<div class="status" id="generateStatus">Laporan dibuat berdasarkan format yang sedang dipilih dan bulan laporan.</div>
+</section>
+<section class="panel" id="setup">
+<h2>Pengaturan koneksi (sekali saat pemasangan)</h2>
+<p class="muted">Masukkan URL Web App Google Apps Script setelah backend dipasang. URL disimpan pada perangkat ini.</p>
+<label for="apiUrl">URL Web App Apps Script</label><input id="apiUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec">
+<div class="actions"><button id="saveConfig">Simpan koneksi</button><button class="secondary" id="testConnection">Uji koneksi</button></div>
+<div class="status" id="configStatus">Belum ada URL backend.</div>
+</section>
+<footer>Data pribadi disimpan pada Google Drive yang Anda hubungkan. Jangan gunakan perangkat umum tanpa keluar dari akun.</footer>
+</main>
+<script src="app.js"></script></body></html>
